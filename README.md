@@ -16,3 +16,37 @@ If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has a
    1. Run `Extensions: Show Built-in Extensions` from VSCode's command palette
    2. Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
 2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+
+要实现鼠标移动时DOM元素实时跟随鼠标坐标，可以使用以下方法来尽量减少延迟：
+
+1. 使用CSS属性`transform: translate(x, y)`：通过设置DOM元素的transform属性来实现平滑移动，而不是直接修改元素的left和top属性。这种方法通常比直接修改位置属性更流畅，因为它会利用硬件加速。
+
+```javascript
+document.addEventListener('mousemove', function(event) {
+  const x = event.clientX;
+  const y = event.clientY;
+  // 使用transform来平滑移动元素
+  yourDOMElement.style.transform = `translate(${x}px, ${y}px)`;
+});
+```
+
+2. 使用requestAnimationFrame：使用requestAnimationFrame来确保更新DOM的位置发生在浏览器渲染下一帧之前，从而更流畅地跟随鼠标移动。
+
+```javascript
+let mouseX = 0;
+let mouseY = 0;
+
+function updatePosition() {
+  yourDOMElement.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+  requestAnimationFrame(updatePosition);
+}
+
+document.addEventListener('mousemove', function(event) {
+  mouseX = event.clientX;
+  mouseY = event.clientY;
+});
+
+updatePosition();
+```
+
+通过以上方法，您可以尽量减少鼠标移动时DOM元素跟随的延迟，使其更加流畅和实时。
