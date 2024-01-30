@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { throttle } from "lodash-es";
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onBeforeMount, onMounted, reactive, ref, unref } from "vue";
 // import HelloWorld from "./components/HelloWorld.vue";
 
 const box = ref<HTMLElement>();
 
-const position = reactive({
-  top: 110,
+const viewportSize = reactive({
+  width: 0,
+  height: 0,
+});
+
+const boxPosition = reactive({
+  bottom: 110,
   right: 0,
 });
 
@@ -15,50 +20,77 @@ const boxSize = reactive({
   height: 0,
 });
 
+const eventPosition = reactive({
+  x: 0,
+  y: 0,
+});
+
+const mousePosition = reactive({
+  x: 0,
+  y: 0,
+});
+
+const isClick = ref(true);
+
 const style = computed(() => {
   return {
-    transform: `translate(${position.right}px, ${position.top}px)`,
-    // top: position.top + "px",
-    // right: position.right + "px",
+    transition: moving.value
+      ? "none"
+      : "translate 0.3s cubic-bezier(0.31, 0.9, 0.88, 0.62)",
+    transform: `translate(${boxPosition.right}px, ${boxPosition.bottom}px)`,
   };
 });
 
-const handleClick = (event: MouseEvent) => {
-  console.log("event.clientX :>> ", event.clientX);
-  console.log("event.clientY :>> ", event.clientY);
-  console.log("box :>> ", box.value);
-};
-
 const moving = ref(false);
 
-// let timeoutId = 0
+function onDown(_event: MouseEvent) {
+  moving.value = true;
+  isClick.value = true;
+}
 
 function onMove(event: MouseEvent) {
-  // clearTimeout(timeoutId);
-  // timeoutId = setTimeout(function() {
-  //   console.log('mousemove事件未中断');
-  // }, 1000);
-  if (moving.value) {
-    // position.top = event.clientY - boxSize.width / 2;
-    // position.right = event.clientX - boxSize.height / 2;
-  } else {
+  if (unref(moving)) {
+    isClick.value = false;
+    mousePosition.x = event.clientX;
+    mousePosition.y = event.clientY;
+    boxPosition.right = event.clientX - viewportSize.width + boxSize.width / 2;
+    boxPosition.bottom =
+      event.clientY - viewportSize.height + boxSize.height / 2;
   }
 }
 
-function onDown(event: MouseEvent) {
-  console.log("onDown :>> ", event);
-  moving.value = true;
-}
-
-function onUp(event: MouseEvent) {
+function onUp(_event: MouseEvent) {
   moving.value = false;
-  // setPosition();
+  setEdgePosition();
+  if (unref(isClick)) {
+    isClick.value = false;
+  }
 }
 
-const viewportSize = reactive({
-  width: 0,
-  height: 0,
-});
+function setEdgePosition() {
+  if (boxPosition.right < 0) {
+    boxPosition.right = 0;
+  }
+  // 贴右
+  if (boxPosition.right > 0) {
+    boxPosition.right = 0;
+  }
+  // 贴底
+  if (boxPosition.bottom > 0) {
+    boxPosition.bottom = 0;
+  }
+  // 贴顶
+  if (viewportSize.height < boxSize.height - boxPosition.bottom) {
+    boxPosition.bottom = boxSize.height - viewportSize.height;
+  }
+}
+
+function onResize(_event: UIEvent) {
+  viewportSize.width = document.documentElement.clientWidth;
+  viewportSize.height = document.documentElement.clientHeight;
+}
+
+window.addEventListener("resize", throttle(onResize, 200));
 
 onMounted(() => {
   viewportSize.width = document.documentElement.clientWidth;
@@ -67,49 +99,38 @@ onMounted(() => {
   boxSize.width = boxBouding.width;
   boxSize.height = boxBouding.height;
 
-  position.right = 0;
-  position.top = viewportSize.height - boxSize.height - 100;
+  boxPosition.right = 0;
+  boxPosition.bottom = 0;
+
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
 });
 
-function onResize(event: UIEvent) {
-  viewportSize.width = document.documentElement.clientWidth;
-  viewportSize.height = document.documentElement.clientHeight;
-  // setPosition();
-}
-
-function setPosition() {
-  console.log("setPosition :>> ", position.top);
-  if (position.top < 0) {
-    position.top = 0;
-  }
-  if (position.top + boxSize.height > viewportSize.height) {
-    position.top = viewportSize.height - boxSize.height;
-  }
-}
-window.addEventListener("resize", throttle(onResize, 100));
-
-const onLeave = (e: MouseEvent) => {
-  console.log("onLeave :>> ", e);
-  moving.value = false;
-  // setPosition();
-};
+onBeforeMount(() => {
+  document.removeEventListener("mousemove", onMove);
+  document.removeEventListener("mouseup", onUp);
+});
 </script>
 
 <template>
-  <div class="content" @click="handleClick">
-    {{ viewportSize }}
-    ===<br />
-    {{ position }}
-    ===<br />
-    {{ boxSize }}
+  <div class="content">
+    viewportSize: {{ viewportSize }} <br />
+    === <br />
+    boxPosition:{{ boxPosition }} <br />
+    === <br />
+    boxSize:{{ boxSize }}
+    <br />
+    === <br />
+    eventPosition:{{ eventPosition }}
+    <br />
+    === <br />
+    mousePosition:{{ mousePosition }}
+
     <div
       ref="box"
       class="box"
-      @mousedown="onDown"
-      @mousemove="onMove"
-      @mouseup="onUp"
-      @mouseleave="onLeave"
       :style="style"
+      @mousedown="onDown"
     >
       box
     </div>
@@ -128,13 +149,15 @@ const onLeave = (e: MouseEvent) => {
   width: 40px;
   height: 40px;
   line-height: 40px;
+  border-radius: 50%;
   text-align: center;
   position: fixed;
   right: 0;
-  top: 0;
+  bottom: 0;
   cursor: pointer;
+  user-select: none;
 }
 .box:hover {
-  box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.1);
 }
 </style>
