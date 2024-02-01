@@ -5,13 +5,15 @@ import { computed, onBeforeMount, onMounted, reactive, ref, unref } from "vue";
 
 const box = ref<HTMLElement>();
 
+const offsetBottom = -100;
+
 const viewportSize = reactive({
   width: 0,
   height: 0,
 });
 
 const boxPosition = reactive({
-  bottom: 110,
+  bottom: offsetBottom,
   right: 0,
 });
 
@@ -36,7 +38,7 @@ const style = computed(() => {
   return {
     transition: moving.value
       ? "none"
-      : "translate 0.3s cubic-bezier(0.31, 0.9, 0.88, 0.62)",
+      : "transform 0.3s cubic-bezier(0.31, 0.9, 0.88, 0.62)",
     transform: `translate(${boxPosition.right}px, ${boxPosition.bottom}px)`,
   };
 });
@@ -46,6 +48,8 @@ const moving = ref(false);
 function onDown(_event: MouseEvent) {
   moving.value = true;
   isClick.value = true;
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
 }
 
 function onMove(event: MouseEvent) {
@@ -65,6 +69,8 @@ function onUp(_event: MouseEvent) {
   if (unref(isClick)) {
     isClick.value = false;
   }
+  document.removeEventListener("mousemove", onMove);
+  document.removeEventListener("mouseup", onUp);
 }
 
 function setEdgePosition() {
@@ -99,11 +105,8 @@ onMounted(() => {
   boxSize.width = boxBouding.width;
   boxSize.height = boxBouding.height;
 
-  boxPosition.right = 0;
-  boxPosition.bottom = 0;
-
-  document.addEventListener("mousemove", onMove);
-  document.addEventListener("mouseup", onUp);
+  // boxPosition.right = 0;
+  // boxPosition.bottom = offsetBottom;
 });
 
 onBeforeMount(() => {
@@ -114,6 +117,7 @@ onBeforeMount(() => {
 
 <template>
   <div class="content">
+    {{ moving }}
     viewportSize: {{ viewportSize }} <br />
     === <br />
     boxPosition:{{ boxPosition }} <br />
@@ -126,14 +130,7 @@ onBeforeMount(() => {
     === <br />
     mousePosition:{{ mousePosition }}
 
-    <div
-      ref="box"
-      class="box"
-      :style="style"
-      @mousedown="onDown"
-    >
-      box
-    </div>
+    <div ref="box" class="box" :style="style" @mousedown="onDown">box</div>
   </div>
   <!-- <HelloWorld msg="Vite + Vue" /> -->
 </template>
