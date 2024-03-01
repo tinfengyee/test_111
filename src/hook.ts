@@ -15,11 +15,12 @@ export function useResizeWidth(
   const { initialMinWidth } = options;
   const minWidth = ref<number>(toValue(initialMinWidth) ?? 0);
   const clickData = ref<number>();
-  const widthTargetX = ref<number>(0)
+  // const widthTargetX = ref<number>(0)
 
-  onMounted(() => {
-    widthTargetX.value = toValue(widthTarget)!.getBoundingClientRect().x;
-  });
+  // onMounted(() => {
+  //   // widthTargetX.value = toValue(widthTarget)!.getBoundingClientRect().x;
+  //   // widthTargetX.value = toValue(widthTarget).offsetLeft;
+  // });
 
   const start = (e: MouseEvent) => {
     clickData.value = e.clientX;
@@ -27,7 +28,7 @@ export function useResizeWidth(
   const move = (e: MouseEvent) => {
     if (clickData.value) {
       // let widthTargetPosition = toValue(widthTarget)!.getBoundingClientRect();
-      let width = e.clientX - toValue(widthTargetX);
+      let width = e.clientX - toValue(widthTarget).offsetLeft;
       if (width < toValue(minWidth)) width = toValue(minWidth);
       clickData.value = width;
     }

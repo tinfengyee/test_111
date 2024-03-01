@@ -227,11 +227,13 @@ onBeforeMount(() => {
   height: 200px;
   border: 1px solid #000;
   position: relative;
+  user-select: none;
+
 }
 .resizable-handle {
   width: 5px;
   height: 100%;
-  background-color: red;
+  background-color: blue;
   position: absolute;
   top: 0;
   right: -2.5px; /* 将调整手柄定位到右边框中心 */
@@ -240,10 +242,11 @@ onBeforeMount(() => {
 .resizable-handle:hover::after {
   content: "ee";
   position: absolute;
-  right: 0;
+  right: -2px;
   top: 0;
   bottom: 0;
   width: 2px;
-  background-color: #e7e9e8;
+  background-color: red;
+  /* background-color: #e7e9e8; */
 }
 </style>
