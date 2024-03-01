@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>整个右边框可拖动调整大小</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 10px;
+      }
+      .resizable {
+        width: 200px;
+        height: 200px;
+        border: 1px solid #000;
+        position: relative;
+      }
+      .resizable-handle {
+        width: 5px;
+        height: 100%;
+        background-color: #ccc;
+        position: absolute;
+        top: 0;
+        right: -2.5px; /* 将调整手柄定位到右边框中心 */
+        cursor: ew-resize; /* 设置鼠标样式为水平调整 */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="resizable">
+      <div class="resizable-handle"></div>
+      这是一个整个右边框都可以调整大小的元素。
+    </div>
+
+    <script>
+      const resizable = document.querySelector(".resizable");
+      const handle = document.querySelector(".resizable-handle");
+      console.log("resizable :>> ", resizable);
+      console.log(resizable.getBoundingClientRect());
+
+      let isResizing = false;
+
+      handle.addEventListener("mousedown", function (e) {
+        isResizing = true;
+        document.addEventListener("mousemove", resizeElement);
+        document.addEventListener("mouseup", stopResize);
+      });
+
+      function resizeElement(e) {
+        if (isResizing) {
+          console.log('e :>> ', e.clientX);
+          resizable.style.width = e.clientX - resizable.offsetLeft + "px";
+        }
+      }
+
+      function stopResize() {
+        isResizing = false;
+        document.removeEventListener("mousemove", resizeElement);
+        document.removeEventListener("mouseup", stopResize);
+      }
+    </script>
+  </body>
+</html>

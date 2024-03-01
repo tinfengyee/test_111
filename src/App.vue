@@ -1,7 +1,21 @@
 <script setup lang="ts">
 import { throttle } from "lodash-es";
 import { computed, onBeforeMount, onMounted, reactive, ref, unref } from "vue";
+import { useResizeWidth } from "./hook";
+const resize = ref<HTMLElement | null>(null);
+const handle = ref<HTMLElement | null>(null);
+
+const { width } = useResizeWidth(resize, handle, {
+  initialMinWidth: 200,
+});
+console.log("width :>> ", width);
+// import { useResizeWidth } from "./hook";
 // import HelloWorld from "./components/HelloWorld.vue";
+
+// `style` will be a helper computed for `left: ?px; top: ?px;`
+// const { x, y } = useResizeWidth(el, {
+//   initialValue: { x: 40, y: 40 },
+// })
 
 const box = ref<HTMLElement>();
 
@@ -113,10 +127,56 @@ onBeforeMount(() => {
   document.removeEventListener("mousemove", onMove);
   document.removeEventListener("mouseup", onUp);
 });
+
+// onMounted(() => {
+//   const resizable = document.querySelector(".resizable");
+//   const handle = document.querySelector(".resizable-handle");
+//   console.log("resizable :>> ", resizable);
+//   console.log(resizable.getBoundingClientRect());
+//   let isResizing = false;
+
+//   handle.addEventListener("mousedown", function (e) {
+//     isResizing = true;
+//     window.addEventListener("mousemove", resizeElement);
+//     window.addEventListener("mouseup", stopResize);
+//   });
+
+//   function resizeElement(e) {
+//     if (isResizing) {
+//       console.log("e :>> ", e.clientX);
+//       let width = e.clientX - resizable.offsetLeft;
+//       if (width < 200) width = 200;
+//       resizable.style.width = width + "px";
+//     }
+//   }
+
+//   function stopResize() {
+//     isResizing = false;
+//     window.removeEventListener("mousemove", resizeElement);
+//     window.removeEventListener("mouseup", stopResize);
+//   }
+// });
+
+// 拖动
 </script>
 
 <template>
   <div class="content">
+    <div class="wrap">
+      <div
+        class="resizable"
+        ref="resize"
+        :style="{
+          width: width + 'px',
+        }"
+      >
+        <div class="resizable-handle" ref="handle"></div>
+    {{ width }}
+        这是一个整个右边框都可以调整大小的元素。
+      </div>
+      <div class="a">aaaa</div>
+    </div>
+    <el-button type="primary">el-button</el-button>
     {{ moving }}
     viewportSize: {{ viewportSize }} <br />
     === <br />
@@ -132,6 +192,7 @@ onBeforeMount(() => {
 
     <div ref="box" class="box" :style="style" @mousedown="onDown">box</div>
   </div>
+
   <!-- <HelloWorld msg="Vite + Vue" /> -->
 </template>
 
@@ -156,5 +217,33 @@ onBeforeMount(() => {
 }
 .box:hover {
   box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.1);
+}
+
+.wrap {
+  display: flex;
+}
+.resizable {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #000;
+  position: relative;
+}
+.resizable-handle {
+  width: 5px;
+  height: 100%;
+  background-color: red;
+  position: absolute;
+  top: 0;
+  right: -2.5px; /* 将调整手柄定位到右边框中心 */
+  cursor: ew-resize; /* 设置鼠标样式为水平调整 */
+}
+.resizable-handle:hover::after {
+  content: "ee";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #e7e9e8;
 }
 </style>
